@@ -1,5 +1,3 @@
-Of course, here is a comprehensive README file for your GitHub project, written in English.
-
 Enhanced Persona-Driven Document Intelligence (Round 1B)
 
 This project provides an advanced Python script that analyzes multiple PDF documents to identify the most relevant sections based on a specific "persona" and "job to be done." It is designed to accept input from a JSON file, which specifies the list of documents and the persona information required for the analysis.
