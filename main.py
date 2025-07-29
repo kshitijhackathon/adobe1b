@@ -1,143 +1,3 @@
-"""
-Round 1B: Enhanced Persona-Driven Document Intelligence
-Modified to accept JSON input files with PDF document lists
-"""
-
-import os
-import json
-import sys
-import re
-import argparse
-import gc
-from datetime import datetime
-from pathlib import Path
-from typing import List, Dict, Tuple, Generator
-from collections import defaultdict
-import fitz 
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.stem import PorterStemmer
-
-def setup_nltk():
-    """Setup NLTK data with error handling"""
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        try:
-            nltk.download('punkt', quiet=True)
-        except:
-            print("Warning: Could not download NLTK punkt tokenizer")
-    
-    try:
-        nltk.data.find('corpora/stopwords')
-    except LookupError:
-        try:
-            nltk.download('stopwords', quiet=True)
-        except:
-            print("Warning: Could not download NLTK stopwords")
-
-setup_nltk()
-
-class MemoryEfficientDocumentProcessor:
-    def __init__(self, chunk_size: int = 50):
-        """Initialize with memory optimization settings"""
-        self.chunk_size = chunk_size  
-        self.stemmer = PorterStemmer()
-        
-        try:
-            self.stop_words = set(stopwords.words('english'))
-        except:
-            self.stop_words = {
-                'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
-                'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers',
-                'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves',
-                'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are',
-                'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does',
-                'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until',
-                'while', 'of', 'at', 'by', 'for', 'with', 'through', 'during', 'before', 'after',
-                'above', 'below', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again',
-                'further', 'then', 'once'
-            }
-    
-    def extract_sections_generator(self, pdf_path: str) -> Generator[Dict, None, None]:
-        """Memory-efficient section extraction using generator"""
-        try:
-            doc = fitz.open(pdf_path)
-            total_pages = len(doc)
-            print(f"Processing {total_pages} pages from {os.path.basename(pdf_path)}")
-            
-            current_section = None
-            
-            for chunk_start in range(0, total_pages, self.chunk_size):
-                chunk_end = min(chunk_start + self.chunk_size, total_pages)
-                
-                for page_num in range(chunk_start, chunk_end):
-                    try:
-                        page = doc[page_num]
-                        blocks = page.get_text("dict")["blocks"]
-                        
-                        for block in blocks:
-                            if block.get("type") == 0:  
-                                for line in block["lines"]:
-                                    for span in line["spans"]:
-                                        text = span["text"].strip()
-                                        size = span["size"]
-                                        flags = span["flags"]
-                                        
-                                        if not text or len(text) < 2:
-                                            continue
-                                        
-                                        is_heading = self._is_heading(text, size, flags)
-                                        
-                                        if is_heading and len(text) > 2:
-                                            if current_section and len(current_section["content"].strip()) > 50:
-                                                yield current_section
-                                            
-                                            current_section = {
-                                                "document": os.path.basename(pdf_path),
-                                                "page_number": page_num + 1,
-                                                "section_title": self._clean_heading(text),
-                                                "content": "",
-                                                "importance_rank": -1,
-                                                "word_count": 0
-                                            }
-                                        else:
-                                            if current_section:
-                                                current_section["content"] += " " + text
-                                                current_section["word_count"] += len(text.split())
-                                                
-                                                if current_section["word_count"] > 2000:
-                                                    yield current_section
-                                                    current_section = {
-                                                        "document": os.path.basename(pdf_path),
-                                                        "page_number": page_num + 1,
-                                                        "section_title": f"{current_section['section_title']} (continued)",
-                                                        "content": "",
-                                                        "importance_rank": -1,
-                                                        "word_count": 0
-                                                    }
-                        
-                        page = None
-                        
-                    except Exception as e:
-                        print(f"Error processing page {page_num}: {str(e)}")
-                        continue
-                
-                # Force garbage collection after each chunk
-                gc.collect()
-            
-            if current_section and len(current_section["content"].strip()) > 50:
-                yield current_section
-            
-            doc.close()
-            
-        except Exception as e:
-            print(f"Error processing {pdf_path}: {str(e)}")
-    
     def _is_heading(self, text: str, size: float, flags: int) -> bool:
         """Enhanced heading detection with multiple heuristics"""
         if size >= 14 or (flags & 2**4):  
@@ -383,87 +243,88 @@ def extract_persona_and_job(json_data: Dict) -> Tuple[str, str]:
     return persona, job
 
 def main():
-    parser = argparse.ArgumentParser(description='Enhanced Persona-Driven Document Intelligence - JSON Input')
-    parser.add_argument('--input', required=True, help='Input JSON file containing document list and persona information')
-    parser.add_argument('--pdf_dir', help='Directory containing PDF files (default: same directory as JSON file)')
-    parser.add_argument('--output', default='output.json', help='Output JSON file')
-    parser.add_argument('--top_k', type=int, default=15, help='Number of top sections to analyze')
-    parser.add_argument('--chunk_size', type=int, default=25, help='Pages per chunk for memory management')
+    print("=== Enhanced Round 1B: Persona-Driven Document Intelligence ===")
+    print()
+
+    # FIXED PATHS
+    input_dir = Path("app/input")
+    output_dir = Path("app/output")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "output.json"
+
+    # Find JSON input file in app/input
+    input_json_files = list(input_dir.glob("*.json"))
+    if not input_json_files:
+        print("No JSON input file found in app/input directory.")
+        return
     
-    args = parser.parse_args()
-    
-    print("=== Enhanced Round 1B: Persona-Driven Document Intelligence (JSON Input) ===")
-    
+    if len(input_json_files) > 1:
+        print(f"Multiple JSON files found, using the first: {input_json_files[0].name}")
+
+    json_input_path = input_json_files[0]
+    print(f"Using input JSON: {json_input_path}")
+
     # Load JSON input
-    json_data = load_json_input(args.input)
+    json_data = load_json_input(str(json_input_path))
     if not json_data:
         print("Failed to load JSON input file. Exiting.")
         return
-    
-    # Extract persona and job information
+
+    # Extract persona and job information from JSON
     persona, job = extract_persona_and_job(json_data)
-    
     if not persona or not job:
-        print("Warning: Persona or job information missing from JSON input")
-        print(f"Persona: {persona}")
-        print(f"Job: {job}")
-    
-    print(f"Persona: {persona}")
-    print(f"Job: {job}")
-    print(f"Processing chunks of {args.chunk_size} pages")
-    
-    # Determine PDF directory
-    json_path = Path(args.input)
-    pdf_base_dir = args.pdf_dir if args.pdf_dir else json_path.parent
-    
-    # Extract PDF file paths
-    pdf_files = extract_pdf_paths(json_data, pdf_base_dir)
-    
-    if not pdf_files:
-        print(f"No PDF files found. Check that:")
-        print(f"1. The JSON file contains a 'documents' array with PDF filenames")
-        print(f"2. PDF files exist in: {pdf_base_dir}")
+        print("Error: Persona or job information missing from JSON input")
         return
-    
+
+    print(f"✓ Persona: {persona}")
+    print(f"✓ Job to be Done: {job}")
+    print()
+
+    chunk_size = 25
+    print(f"Processing PDF pages in chunks of {chunk_size} pages")
+
+    # Look for PDF files based on JSON document list
+    pdf_files = extract_pdf_paths(json_data, input_dir)
+    if not pdf_files:
+        print(f"No PDF files found in {input_dir} as specified in JSON.")
+        return
+
     print(f"Found {len(pdf_files)} PDF file(s) to process...")
-    
-    processor = MemoryEfficientDocumentProcessor(chunk_size=args.chunk_size)
-    
+
+    processor = MemoryEfficientDocumentProcessor(chunk_size=chunk_size)
+
     all_sections = []
     processed_documents = []
-    
+
     for pdf_file in pdf_files:
         print(f"\nProcessing: {pdf_file.name}")
         section_count = 0
-        
+
         try:
             for section in processor.extract_sections_generator(str(pdf_file)):
                 all_sections.append(section)
                 section_count += 1
-                
                 if section_count % 50 == 0:
                     print(f"  Extracted {section_count} sections...")
-            
             processed_documents.append(pdf_file.name)
             print(f"  Completed: {section_count} sections extracted")
-            
         except Exception as e:
             print(f"  Error processing {pdf_file.name}: {str(e)}")
             continue
-    
+
     print(f"\nTotal sections extracted: {len(all_sections)}")
-    
     if not all_sections:
         print("No sections extracted. Exiting.")
         return
-    
+
     print("\nCalculating relevance scores...")
     ranked_sections = processor.calculate_relevance_scores_batch(all_sections, persona, job)
-    
-    print(f"\nExtracting top {args.top_k} subsections...")
-    subsections = processor.extract_subsections(ranked_sections, args.top_k)
-    
-    # Create output with same format as original
+
+    top_k = 15
+    print(f"\nExtracting top {top_k} subsections...")
+    subsections = processor.extract_subsections(ranked_sections, top_k)
+
+    # Output file will be app/output/output.json
     output = {
         "metadata": {
             "input_documents": sorted(processed_documents),
@@ -478,7 +339,7 @@ def main():
                 "importance_rank": section["importance_rank"],
                 "page_number": section["page_number"]
             }
-            for section in ranked_sections[:args.top_k] 
+            for section in ranked_sections[:top_k] 
         ],
         "subsection_analysis": [
             {
@@ -489,24 +350,21 @@ def main():
             for section in subsections
         ]
     }
-    
-    output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
-    
+
     print(f"\n=== Results ===")
-    print(f"Results written to: {args.output}")
+    print(f"Results written to: {output_path}")
     print(f"Documents processed: {len(processed_documents)}")
     print(f"Total sections: {len(all_sections)}")
     print(f"Top sections analyzed: {len(subsections)}")
-    
+
     print(f"\nTop 10 most relevant sections:")
     for i, section in enumerate(ranked_sections[:10]):
         score = section.get('relevance_score', 0.0)
         print(f"{i+1:2d}. [{section['document']}] {section['section_title'][:60]}... (Score: {score:.3f})")
-    
+
     print("\nProcessing completed successfully!")
 
 if __name__ == "__main__":
