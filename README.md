@@ -1,115 +1,93 @@
-Enhanced Persona-Driven Document Intelligence (Round 1B)
+# 📄 Enhanced Persona-Driven Document Intelligence (Round 1B)
 
-This project provides an advanced Python script that analyzes multiple PDF documents to identify the most relevant sections based on a specific "persona" and "job to be done." It is designed to accept input from a JSON file, which specifies the list of documents and the persona information required for the analysis.
+A scalable and memory-efficient Python tool that intelligently analyzes multiple PDF documents to extract the most relevant sections based on a **persona** and a specific **job to be done**.
 
-The tool leverages memory-efficient techniques, making it capable of handling large files and complex documents effectively.
+This solution is crafted for the **Adobe India Hackathon 2025 (Round 1B)** and builds upon the foundation of Round 1A, enhanced to support **batch PDF processing via a JSON configuration**. It is designed to extract **actionable insights** for varied use cases such as financial audits, technical research, and enterprise documentation analysis.
 
-✨ Features
+---
 
-JSON Input: Uses a JSON file for configuration, including the list of PDF files, persona, and job details.
+## ✨ Features
 
-Batch Processing: Processes multiple PDF documents in a single run.
+* ✅ **JSON-based Input**: Flexible configuration for multiple PDFs, persona, and job/task.
+* 📚 **Batch Processing**: Handles multiple documents in a single run.
+* 🧠 **Persona-Aware Analysis**: Uses TF-IDF + Cosine Similarity to rank sections by relevance.
+* 🧵 **Memory-Efficient Chunking**: Splits PDFs into page chunks to optimize memory usage.
+* 📊 **Dynamic Section Detection**: Detects logical sections based on font sizes and text patterns.
+* 🧹 **Text Preprocessing**: Cleans and normalizes content using stopword removal and stemming.
+* 📈 **Relevance Ranking**: Scores and ranks document sections based on semantic similarity.
+* 📝 **Summarization**: Extractive summarization for high-priority content.
+* 🖥️ **CLI Support**: Easy-to-use command-line interface with custom arguments.
 
-Persona-Based Analysis: Utilizes TF-IDF and Cosine Similarity to evaluate text relevance against a given persona and task.
+---
 
-Memory Efficient: Employs generators and chunking to handle large PDFs, minimizing memory usage and enabling garbage collection.
+## 🧠 How It Works
 
-Advanced Section Detection: Robustly identifies document sections based on headings, font sizes, and text patterns.
+1. **Input Parsing**: Loads persona, job task, and list of PDFs from a JSON file.
+2. **PDF Sectioning**: Detects headings/sections using heuristics (font size, bold text).
+3. **Text Preprocessing**: Applies stopword removal, tokenization, and stemming.
+4. **Relevance Calculation**: Uses TF-IDF and cosine similarity to match sections with persona query.
+5. **Ranking & Summarization**: Outputs top-k relevant sections with brief summaries.
+6. **Output Generation**: Results saved as structured JSON with extracted content, ranks, and metadata.
 
-Text Preprocessing: Cleans text by removing stopwords, performing stemming, and normalizing content to improve accuracy.
+---
 
-Relevance Ranking: Ranks each section according to its relevance to the specified persona.
+## 📦 Folder Structure (Example)
 
-Summarization: Generates concise summaries by extracting key sentences from the most important sections.
+```
+.
+├── main.py
+├── Dockerfile
+├── input.json
+├── challenge1b_output.json
+├── /output
+│   └── results.json
+├── requirements.txt
+└── README.md
+```
 
-Command-Line Interface: Supports command-line arguments for ease of use and automation.
+---
 
-⚙️ How It Works
+## 🔧 Installation
 
-Load Input: The script parses a JSON file to get the list of PDF files, the persona, and the "job to be done."
+> 💡 Requires **Python 3.6+**
 
-Extract Sections: It processes each PDF in a memory-efficient manner, identifying chapters or sections based on text size, style, and structure.
+1. **Clone the repository**:
 
-Preprocess Text: The text from each section is cleaned—stopwords are removed, and words are reduced to their root form (stemming).
+   ```bash
+   git clone <your-repo-url>
+   cd <your-project-folder>
+   ```
 
-Calculate Relevance: A query is constructed from the persona and job description. Using TfidfVectorizer and cosine_similarity, the script calculates how similar each section is to this query.
+2. **Install dependencies**:
 
-Rank and Summarize: Sections are ranked based on their relevance scores. The top-ranked sections are further analyzed to create short, readable summaries.
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Generate Output: The final results are saved to a JSON file, detailing the top extracted sections and their corresponding summaries.
+3. **Download NLTK resources**:
 
-📦 Requirements
+   ```python
+   import nltk
+   nltk.download('punkt')
+   nltk.download('stopwords')
+   ```
 
-You will need Python 3.6+ to run this script. The following libraries are required:
+---
 
+## 📄 `requirements.txt`
+
+```
 PyMuPDF
-
-scikit-learn
-
-nltk
-
-numpy
-
-🚀 Installation
-
-Clone this repository:
-
-Generated bash
-git clone <your-repository-url>
-cd <your-repository-directory>
-
-
-Install the required libraries:
-You can install the necessary packages using pip. For convenience, you can create a requirements.txt file.
-
-requirements.txt:
-
-Generated code
-PyMuPDF
 scikit-learn
 nltk
 numpy
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-IGNORE_WHEN_COPYING_END
+```
 
-Then, run the command:
+---
 
-Generated bash
-pip install -r requirements.txt
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+## 📝 Sample `input.json`
 
-Download NLTK Data:
-The first time you run the script, it will automatically attempt to download the punkt (for sentence tokenization) and stopwords corpora. If this fails, you can download them manually by running the following commands in a Python interpreter:
-
-Generated python
-import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Python
-IGNORE_WHEN_COPYING_END
-📝 Usage
-
-The script is run from the command line. You must provide an input JSON file.
-
-Step 1: Create an Input JSON File
-
-Create a JSON file (e.g., input.json) that details the documents, persona, and job to be done.
-
-Example input.json:
-
-Generated json
+```json
 {
   "documents": [
     { "filename": "document1.pdf" },
@@ -123,63 +101,35 @@ Generated json
     "task": "Identify key financial risks and growth opportunities in the annual report"
   }
 }
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Json
-IGNORE_WHEN_COPYING_END
-Step 2: Organize Your Files
+```
 
-Place your PDF files (document1.pdf, annual_report_2023.pdf, etc.) into a folder.
+---
 
-Place your input.json file in the main project directory.
+## 🚀 Usage
 
-Step 3: Run the Script
+> You can run the script directly from the command line.
 
-Execute the main.py script from your command line.
+### 🔹 Basic Syntax:
 
-Syntax:
-
-Generated bash
-python main.py --input <path_to_json> --pdf_dir <path_to_pdfs> --output <output_file_name> --top_k <number_of_sections>
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
-
-Example:
-
-Assuming your PDFs are in a folder named data/:
-
-Generated bash
+```bash
 python main.py --input input.json --pdf_dir data/ --output results.json --top_k 20
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+```
 
---input: Path to your input JSON file (required).
+### 🔹 Parameters:
 
---pdf_dir: The directory where your PDF files are stored. If not provided, it defaults to the same directory as the input JSON file.
+| Argument       | Description                                     | Default          |
+| -------------- | ----------------------------------------------- | ---------------- |
+| `--input`      | Path to your JSON configuration file            | **Required**     |
+| `--pdf_dir`    | Folder containing your PDF files                | Same as JSON dir |
+| `--output`     | Path to the output JSON file                    | `output.json`    |
+| `--top_k`      | Number of top sections to extract and summarize | `15`             |
+| `--chunk_size` | Number of pages per memory chunk                | `25`             |
 
---output: The name of the output JSON file (default: output.json).
+---
 
---top_k: The number of top relevant sections to analyze (default: 15).
+## 📤 Sample Output (`results.json`)
 
---chunk_size: The number of pages per chunk for memory management (default: 25).
-
-📤 Output Format
-
-The script generates a JSON file containing the results of the analysis.
-
-Example results.json:
-
-Generated json
+```json
 {
   "metadata": {
     "input_documents": [
@@ -189,7 +139,7 @@ Generated json
     ],
     "persona": "Financial Analyst",
     "job_to_be_done": "Identify key financial risks and growth opportunities in the annual report",
-    "processing_timestamp": "2024-05-21T10:30:00.123456"
+    "processing_timestamp": "2025-07-29T10:30:00.123456"
   },
   "extracted_sections": [
     {
@@ -218,12 +168,50 @@ Generated json
     }
   ]
 }
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Json
-IGNORE_WHEN_COPYING_END
-📄 License
+```
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+---
+
+## 🧪 Testing Locally
+
+You can test with your own PDFs by:
+
+1. Placing them in the `data/` folder.
+2. Updating the `input.json` file.
+3. Running the script with `python main.py ...`
+
+Make sure paths are correct relative to your working directory.
+
+---
+
+## 🧠 Potential Use Cases
+
+* 🔍 Annual Report Analysis
+* 📊 Competitive Landscape Mapping
+* 📄 Technical Documentation Review
+* 📈 Investment Risk Profiling
+* 🧑‍⚕️ Clinical Report Filtering
+* 🧠 Legal Contract Summarization
+
+---
+
+## 🛡️ License
+
+This project is licensed under the [MIT License](./LICENSE).
+
+---
+
+## 💡 Credits
+
+Crafted for the **Adobe India Hackathon 2025 - Round 1B**
+Built with ❤️ using Python, NLP, and PDF intelligence.
+
+---
+
+If you’d like, I can now:
+
+* Export this as a `README.md` file for you
+* Help you generate a `requirements.txt` or test your `main.py` for edge cases
+* Write your submission paragraph for Unstop or Adobe Hackathon portal
+
+Just let me know!
